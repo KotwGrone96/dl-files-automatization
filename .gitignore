@@ -1,0 +1,8 @@
+node_modules/
+pdf/
+video/
+audio/
+*.xlsx
+downloads_old/
+downloads/
+download/

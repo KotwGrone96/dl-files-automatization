@@ -6,7 +6,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "excel": "node excel/index.js"
+    "excel": "node excel/index.js",
+    "start":"node excel/index.js"
   },
   "keywords": [],
   "author": "",

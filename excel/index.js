@@ -1,12 +1,12 @@
 import XLSX from 'xlsx';
-import { downloadYT,GET_HREF_CNTV,downloadVideo, downloadFile, GET_HREF_KHAN_YT, get_mime_type } from './../file_types/index.js';
+import { downloadYT,GET_HREF_CNTV,downloadVideo, downloadFile, GET_HREF_KHAN_YT, get_mime_type, downloadPDF } from './../file_types/index.js';
 import normalizeString from './../helpers/normalizeString.js';
 import puppeteer from 'puppeteer';
 import fs from 'fs';
 import { join } from 'path';
 import {__dirname} from './../basepaths.js';
 
-const excel_name = 'lista-de-recursos-abril.xlsx';
+const excel_name = ''; //TODO: NOMBRE DEL EXCEL
 
 const workbook = XLSX.readFile(excel_name);
 const sheet_name = workbook.SheetNames[0];
@@ -14,7 +14,7 @@ const worksheet = workbook.Sheets[sheet_name];
 
 const main = async () => { 
 
-   const dl_folder = 'downloads';
+   const dl_folder = 'descarga_junio_11-06-23';
 
    const __dir_downloads = fs.existsSync(join(__dirname,dl_folder));
    __dir_downloads?'':fs.mkdirSync(join(__dirname,dl_folder));
@@ -31,10 +31,14 @@ const main = async () => {
    let downloaded_resources = 0;
    for (const el of data) {
 
-      if(el['Estado'] == 'En Registro de RADI' || el['Estado'] == 'Rechazado'){
+      if(el['Estado'] == 'En Registro de RADI' || el['Estado'] == 'Rechazado' || el['Estado'] == 'En Aprobación del Tecnologo y Especialista de Área'){
          index++;
          continue;
       }
+      // if(el['Estado'] != 'Aprobado por Calidad'){
+      //    index++;
+      //    continue;
+      // }
 
       try {
          const title = normalizeString(el['Título']);
@@ -90,13 +94,13 @@ const main = async () => {
                   }
                   const file = await downloadYT(el['Enlace'],path,`${title}.mp4`);
                   if(file){
-                     XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${title}.mp4`)]],{origin: 'AB' + (index + 2)});
+                     XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${title}.mp4`)]],{origin: 'AC' + (index + 2)});
                      await XLSX.writeFile(workbook, excel_name);
                      index++;
                      downloaded_resources++;
                      continue;
                   }else{
-                     XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AB' + (index + 2)});
+                     XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AC' + (index + 2)});
                      await XLSX.writeFile(workbook, excel_name);
                      index++;
                      continue;
@@ -113,19 +117,19 @@ const main = async () => {
                   if(link){
                      const video = await downloadVideo(link,path,`${title}.mp4`);
                      if(video){
-                        XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${title}.mp4`)]],{origin: 'AB' + (index + 2)});
+                        XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${title}.mp4`)]],{origin: 'AC' + (index + 2)});
                         await XLSX.writeFile(workbook, excel_name);
                         index++;
                         downloaded_resources++;
                         continue;
                      }else{
-                        XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AB' + (index + 2)});
+                        XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AC' + (index + 2)});
                         await XLSX.writeFile(workbook, excel_name);
                         index++;
                         continue;
                      }
                   }else{
-                     XLSX.utils.sheet_add_aoa(worksheet,[['EL ENLACE NO TIENE BOTÓN DE DESCARGA']],{origin: 'AB' + (index + 2)});
+                     XLSX.utils.sheet_add_aoa(worksheet,[['EL ENLACE NO TIENE BOTÓN DE DESCARGA']],{origin: 'AC' + (index + 2)});
                      await XLSX.writeFile(workbook, excel_name);
                      index++;
                      continue;
@@ -141,30 +145,46 @@ const main = async () => {
                   if(link){
                      const video = await downloadYT(link,path,`${title}.mp4`);
                      if(video){
-                        XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${title}.mp4`)]],{origin: 'AB' + (index + 2)});
+                        XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${title}.mp4`)]],{origin: 'AC' + (index + 2)});
                         await XLSX.writeFile(workbook, excel_name);
                         index++;
                         downloaded_resources++;
                         continue;
                      }else{
-                        XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AB' + (index + 2)});
+                        XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AC' + (index + 2)});
                         await XLSX.writeFile(workbook, excel_name);
                         index++;
                         continue;
                      }
                   }else{
-                     XLSX.utils.sheet_add_aoa(worksheet,[['ESTE ENLACE DE KHAN ACADEMY NO TIENE IFRAME']],{origin: 'AB' + (index + 2)});
+                     XLSX.utils.sheet_add_aoa(worksheet,[['ESTE ENLACE DE KHAN ACADEMY NO TIENE IFRAME']],{origin: 'AC' + (index + 2)});
                      await XLSX.writeFile(workbook, excel_name);
                      index++;
                      continue;
                   }
-                  
                }else{
                   const mime = await get_mime_type(el['Enlace']);
                   if(mime == 'video/mp4'){
-
+                     const fileAlreadyExist = fs.existsSync(join(path,`${title}.mp4`));
+                     if(fileAlreadyExist){
+                        index++;
+                        continue;
+                     }
+                     const video = await downloadVideo(el['Enlace'],path,`${title}.mp4`);
+                     if(video){
+                        XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${title}.mp4`)]],{origin: 'AC' + (index + 2)});
+                        await XLSX.writeFile(workbook, excel_name);
+                        index++;
+                        downloaded_resources++;
+                        continue;
+                     }else{
+                        XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AC' + (index + 2)});
+                        await XLSX.writeFile(workbook, excel_name);
+                        index++;
+                        continue;
+                     }
                   }else{
-                     XLSX.utils.sheet_add_aoa(worksheet,[['NO ES YOUTUBE/CNTV/KHAN_ACADEMY O FORMATO DE VIDEO']],{origin: 'AB' + (index + 2)});
+                     XLSX.utils.sheet_add_aoa(worksheet,[['NO ES YOUTUBE/CNTV/KHAN_ACADEMY O FORMATO DE VIDEO']],{origin: 'AC' + (index + 2)});
                      await XLSX.writeFile(workbook, excel_name);
                      index++;
                      continue;
@@ -179,13 +199,13 @@ const main = async () => {
                   }
                const file = await downloadFile(el['Enlace'],path,title);
                if(file.ok){
-                  XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${file.filename}`)]],{origin: 'AB' + (index + 2)});
+                  XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${file.filename}`)]],{origin: 'AC' + (index + 2)});
                   await XLSX.writeFile(workbook, excel_name);
                   index++;
                   downloaded_resources++;
                   continue;
                }else{
-                  XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AB' + (index + 2)});
+                  XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AC' + (index + 2)});
                   await XLSX.writeFile(workbook, excel_name);
                   index++;
                   continue;
@@ -199,13 +219,13 @@ const main = async () => {
                   }
                const file = await downloadFile(el['Enlace'],path,title);
                if(file.ok){
-                  XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${file.filename}`)]],{origin: 'AB' + (index + 2)});
+                  XLSX.utils.sheet_add_aoa(worksheet,[[join(path,`${file.filename}`)]],{origin: 'AC' + (index + 2)});
                   await XLSX.writeFile(workbook, excel_name);
                   index++;
                   downloaded_resources++;
                   continue;
                }else{
-                  XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AB' + (index + 2)});
+                  XLSX.utils.sheet_add_aoa(worksheet,[['PROBLEMAS EN LA DESCARGA']],{origin: 'AC' + (index + 2)});
                   await XLSX.writeFile(workbook, excel_name);
                   index++;
                   continue;
@@ -213,7 +233,7 @@ const main = async () => {
             }
             
             else{
-               XLSX.utils.sheet_add_aoa(worksheet,[['NO DESCARGADO']],{origin: 'AB' + (index + 2)});
+               XLSX.utils.sheet_add_aoa(worksheet,[['NO DESCARGADO']],{origin: 'AC' + (index + 2)});
                await XLSX.writeFile(workbook, excel_name);
                index++;
                continue;

@@ -6,7 +6,7 @@ import fs from 'fs';
 import { join } from 'path';
 import {__dirname} from './../basepaths.js';
 
-const excel_name = ''; //TODO: NOMBRE DEL EXCEL
+const excel_name = 'descarga_junio_20-06-23.xlsx'; //TODO: NOMBRE DEL EXCEL
 
 const workbook = XLSX.readFile(excel_name);
 const sheet_name = workbook.SheetNames[0];
@@ -14,7 +14,7 @@ const worksheet = workbook.Sheets[sheet_name];
 
 const main = async () => { 
 
-   const dl_folder = 'descarga_junio_11-06-23';
+   const dl_folder = 'descarga_junio_20-06-23';
 
    const __dir_downloads = fs.existsSync(join(__dirname,dl_folder));
    __dir_downloads?'':fs.mkdirSync(join(__dirname,dl_folder));
